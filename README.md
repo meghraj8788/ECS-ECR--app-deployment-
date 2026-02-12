@@ -1,4 +1,15 @@
 # ECS-ECR--app-deployment-
+
+Check out my blog here:
+
+🔗 https://ecs-meghraj.hashnode.dev/end-to-end-container-deployment-on-aws-ecr-ecs?showSharer=true
+
+Application source code is available at:
+
+🔗 https://github.com/meghraj8788/node-todo-cicd
+
+
+
 Deployment Workflow
 
 1️⃣ Create EC2 (Build environment)
