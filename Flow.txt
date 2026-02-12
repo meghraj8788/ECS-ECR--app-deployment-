@@ -1,0 +1,202 @@
+End-to-End Container Deployment on AWS: ECR + ECS
+Updated
+
+
+🔁 Internal Architecture Flow
+🔹 What is ECR?
+🔹 What is ECS?
+1️⃣ EC2 Launch Type
+2️⃣ Fargate Launch Type
+Node Base Image
+🔹 Why Do We Need to Create an ECS Cluster?
+Step 2: Create Task Definition
+Issue
+🔁 What Happens Internally?
+Step 1 → Create EC2 (for build environment)
+
+Step 2 → Install Docker & AWS CLI
+
+Step 3 → Create ECR Repository
+
+step 4 → clone Repo on ec2
+
+Step 4 → Build Docker Image
+
+Step 5 → Authenticate & Push Image to ECR
+
+Step 6 → Create ECS Cluster (Fargate)
+
+Step 7 → Create Task Definition
+
+Step 8 → Create Service
+
+Step 9 → Configure Security Group
+
+Step 10 → Access Application via Public IP:8000
+
+🔁 Internal Architecture Flow
+Developer → Docker Build → ECR (Image Storage)
+        ↓
+ECS Task Definition → ECS Cluster → Fargate
+        ↓
+Container Running
+        ↓
+Security Group Allows Port 8000
+        ↓
+Application Accessible via Public IP
+
+Create EC2 and ECR on aws install all prerequisites
+
+ECR = Elastic Container Registry
+
+🔹 What is ECR?
+Amazon Elastic Container Registry (ECR) is a fully managed Docker image registry.
+
+It stores:
+
+Docker images
+
+Image versions (tags)
+
+Secure private repositories
+
+Think of it like Docker Hub inside AWS.
+
+ECS = Elasic Container Service
+
+🔹 What is ECS?
+Amazon Elastic Container Service (ECS) is a container orchestration service.
+
+It helps you:
+
+Run containers
+
+Manage scaling
+
+Handle networking
+
+Maintain availability
+
+Instead of manually running:
+
+docker run
+
+ECS runs and manages containers for you.
+
+1️⃣ EC2 Launch Type
+You manage EC2 instances.
+Containers run on those EC2 servers.
+
+More control, more responsibility.
+
+2️⃣ Fargate Launch Type
+Serverless container engine.
+No need to manage EC2.
+
+AWS manages infrastructure.
+
+below prerequisites we have to install before push on ecr
+
+Make sure that you have the latest version of the AWS CLI and Docker installed. For more information, see Getting started with Amazon ECR .
+
+Use the following steps to authenticate and push an image to your repository. For additional registry authentication methods, including the Amazon ECR credential helper, see Registry authentication .
+
+Retrieve an authentication token and authenticate your Docker client to your registry. Use the AWS CLI:
+
+aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin 130255498314.dkr.ecr.eu-west-1.amazonaws.com
+
+Note: if you receive an error using the AWS CLI, make sure that you have the latest version of the AWS CLI and Docker installed.
+
+Build your Docker image using the following command. For information on building a Docker file from scratch, see the instructions here . You can skip this step if your image has already been built:
+
+docker build -t aws-services .
+
+After the build is completed, tag your image so you can push the image to this repository:
+
+docker tag aws-services:latest 130255498314.dkr.ecr.eu-west-1.amazonaws.com/aws-services:latest
+
+Run the following command to push this image to your newly created AWS repository:
+
+docker push 130255498314.dkr.ecr.eu-west-1.amazonaws.com/aws-services:latest
+
+
+
+after installing aws CLI you can connect to aws ECR by IAM user
+after using above command u can connect to ECR
+now you can build image and push to ECR
+
+docker file
+
+Node Base Image
+FROM node:12.2.0-alpine
+
+#Working Directry WORKDIR /node
+
+#Copy the Code COPY . .
+
+#Install the dependecies RUN npm install RUN npm run test EXPOSE 8000
+
+#Run the code CMD ["node","app.js"]
+
+after push
+
+
+
+after pushing image on ECR now we have to run image so create cluster on ECS
+
+🔹 Why Do We Need to Create an ECS Cluster?
+A cluster is a logical group where your containers run.
+
+Think of it like this:
+
+Docker image → runs inside container
+Container → runs inside task
+Task → runs inside cluster
+
+So without a cluster, ECS does not know where to run your container.
+
+
+
+Step 2: Create Task Definition
+Task Definition = Blueprint of container.
+
+It defines:
+
+Which image to use
+
+which port to use for image
+
+CPU & Memory
+
+Port mappings
+
+Environment variables
+
+IAM role
+
+
+
+
+
+and you can choose your cluster and it will run
+
+
+
+Task is running so so you can access your app on 8000 port
+
+Issue
+
+
+sometime port is not enabled so in task → in networking → ENI ID → Security Groups → edit inboud rules and add 8000 port
+application will run now
+
+
+
+🔁 What Happens Internally?
+ECS pulls image from ECR
+
+ECS creates container
+
+Container runs inside AWS managed infrastructure
+
+If container crashes → ECS restarts automatically
