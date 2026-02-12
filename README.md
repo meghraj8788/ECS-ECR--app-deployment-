@@ -12,7 +12,7 @@ Application source code is available at:
 
 Deployment Workflow
 
-1️⃣ Create EC2 (Build environment)
+1️⃣ Create EC2 (Build environment):
 2️⃣ Install Docker & AWS CLI
 3️⃣ Create ECR Repository
 4️⃣ Build Docker Image
