@@ -48,155 +48,138 @@ Application Accessible via Public IP
 Create EC2 and ECR on aws install all prerequisites
 
 ECR = Elastic Container Registry
+📝 Clean Blog Structure (You Can Copy This)
+🚀 Introduction
+
+In this blog, we will deploy a Node.js application on AWS using:
+
+Docker
+
+Amazon ECR
+
+Amazon ECS (Fargate)
+
+We will go from local build to production deployment step by step.
 
 🔹 What is ECR?
-Amazon Elastic Container Registry (ECR) is a fully managed Docker image registry.
 
-It stores:
+Amazon Elastic Container Registry (ECR) is a fully managed Docker image registry that stores container images securely inside AWS.
 
-Docker images
-
-Image versions (tags)
-
-Secure private repositories
-
-Think of it like Docker Hub inside AWS.
-
-ECS = Elasic Container Service
+Think of it as Docker Hub inside AWS.
 
 🔹 What is ECS?
-Amazon Elastic Container Service (ECS) is a container orchestration service.
 
-It helps you:
+Amazon Elastic Container Service (ECS) is a container orchestration service that runs and manages Docker containers at scale.
 
-Run containers
-
-Manage scaling
-
-Handle networking
-
-Maintain availability
-
-Instead of manually running:
+Instead of running:
 
 docker run
 
-ECS runs and manages containers for you.
 
+ECS manages infrastructure, scaling, and availability automatically.
+
+🔹 ECS Launch Types
 1️⃣ EC2 Launch Type
-You manage EC2 instances.
-Containers run on those EC2 servers.
 
-More control, more responsibility.
+You manage EC2 instances.
 
 2️⃣ Fargate Launch Type
-Serverless container engine.
-No need to manage EC2.
 
-AWS manages infrastructure.
+Serverless containers. AWS manages infrastructure.
 
-below prerequisites we have to install before push on ecr
+In this blog, we use Fargate.
 
-Make sure that you have the latest version of the AWS CLI and Docker installed. For more information, see Getting started with Amazon ECR .
+🔹 Prerequisites
 
-Use the following steps to authenticate and push an image to your repository. For additional registry authentication methods, including the Amazon ECR credential helper, see Registry authentication .
+AWS Account
 
-Retrieve an authentication token and authenticate your Docker client to your registry. Use the AWS CLI:
+IAM User with ECR & ECS permissions
 
-aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin 130255498314.dkr.ecr.eu-west-1.amazonaws.com
+AWS CLI installed
 
-Note: if you receive an error using the AWS CLI, make sure that you have the latest version of the AWS CLI and Docker installed.
+Docker installed
 
-Build your Docker image using the following command. For information on building a Docker file from scratch, see the instructions here . You can skip this step if your image has already been built:
+🔹 Step 1: Create ECR Repository
 
+Create a private repository in ECR.
+
+🔹 Step 2: Authenticate to ECR
+aws ecr get-login-password --region eu-west-1 | \
+docker login --username AWS --password-stdin <account-id>.dkr.ecr.eu-west-1.amazonaws.com
+
+🔹 Step 3: Dockerfile
+FROM node:12.2.0-alpine
+WORKDIR /node
+COPY . .
+RUN npm install
+RUN npm run test
+EXPOSE 8000
+CMD ["node","app.js"]
+
+🔹 Step 4: Build Image
 docker build -t aws-services .
 
-After the build is completed, tag your image so you can push the image to this repository:
+🔹 Step 5: Tag Image
+docker tag aws-services:latest <account-id>.dkr.ecr.eu-west-1.amazonaws.com/aws-services:latest
 
-docker tag aws-services:latest 130255498314.dkr.ecr.eu-west-1.amazonaws.com/aws-services:latest
+🔹 Step 6: Push Image
+docker push <account-id>.dkr.ecr.eu-west-1.amazonaws.com/aws-services:latest
 
-Run the following command to push this image to your newly created AWS repository:
+🔹 Step 7: Create ECS Cluster
 
-docker push 130255498314.dkr.ecr.eu-west-1.amazonaws.com/aws-services:latest
+Cluster is a logical group where tasks run.
 
+Without cluster → ECS doesn’t know where to run containers.
 
+🔹 Step 8: Create Task Definition
 
-after installing aws CLI you can connect to aws ECR by IAM user
-after using above command u can connect to ECR
-now you can build image and push to ECR
+Task definition defines:
 
-docker file
-
-Node Base Image
-FROM node:12.2.0-alpine
-
-#Working Directry WORKDIR /node
-
-#Copy the Code COPY . .
-
-#Install the dependecies RUN npm install RUN npm run test EXPOSE 8000
-
-#Run the code CMD ["node","app.js"]
-
-after push
-
-
-
-after pushing image on ECR now we have to run image so create cluster on ECS
-
-🔹 Why Do We Need to Create an ECS Cluster?
-A cluster is a logical group where your containers run.
-
-Think of it like this:
-
-Docker image → runs inside container
-Container → runs inside task
-Task → runs inside cluster
-
-So without a cluster, ECS does not know where to run your container.
-
-
-
-Step 2: Create Task Definition
-Task Definition = Blueprint of container.
-
-It defines:
-
-Which image to use
-
-which port to use for image
+Docker image
 
 CPU & Memory
 
-Port mappings
+Port mapping
 
-Environment variables
+IAM roles
 
-IAM role
+Networking
 
+🔹 Step 9: Create Service
 
+Service keeps container running and manages scaling.
 
+🔹 Step 10: Configure Security Group
 
+Allow inbound:
 
-and you can choose your cluster and it will run
+Port 8000
+Source: 0.0.0.0/0
 
+🔹 Internal Working
 
+When service starts:
 
-Task is running so so you can access your app on 8000 port
-
-Issue
-
-
-sometime port is not enabled so in task → in networking → ENI ID → Security Groups → edit inboud rules and add 8000 port
-application will run now
-
-
-
-🔁 What Happens Internally?
 ECS pulls image from ECR
 
-ECS creates container
+Fargate creates container
 
-Container runs inside AWS managed infrastructure
+Application starts
 
-If container crashes → ECS restarts automatically
+Security group allows traffic
+
+App becomes publicly accessible
+
+If container crashes → ECS restarts automatically.
+
+🧠 Common Issue
+
+If port not accessible:
+
+Go to:
+
+Task → Networking → ENI → Security Group → Add port 8000
+
+🎯 Final Conclusion (Professional Ending)
+
+“By combining Docker, Amazon ECR, and Amazon ECS (Fargate), we can deploy scalable, production-ready containerized applications without managing servers manually. This architecture enables secure image storage, automated container orchestration, and high availability.”
